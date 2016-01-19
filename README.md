@@ -65,8 +65,8 @@ We are making a website!
 > plain text formatting syntax designed so that it can be converted to
 > [HTML][html] (among other formats).
 
-Now Boot allows us to call tasks from the terminal. To see what tasks
-you have on your disposal you can run `boot --help` from a terminal
+Now Boot allows us to run tasks from the terminal. To see what tasks
+we have at our disposal we can run `boot --help` from a terminal
 session.
 
 The printed output will have a section similar to this:
@@ -123,11 +123,11 @@ but instead add information to this value so that it can all be
 written to files at a later stage.
 
 ```
-┌───────┐       ┌───────┐       ┌───────┐        ┌───────┐
-│ Value │Task 1 │ Value │Task 2 │ Value │Task 3  │ Value │
-│ V0    │──────▶│ V1    │──────▶│ V2    │───────▶│ V3    │
-│       │       │       │       │       │        │       │
-└───────┘       └───────┘       └───────┘        └───────┘
+┌───────┐            ┌───────┐            ┌───────┐            ┌───────┐
+│ Value │   Task 1   │ Value │   Task 2   │ Value │   Task 3   │ Value │
+│ V0    │───────────▶│ V1    │───────────▶│ V2    │───────────▶│ V3    │
+│       │            │       │            │       │            │       │
+└───────┘            └───────┘            └───────┘            └───────┘
 ```
 
 To inspect the value that is passed from task to task we can use the
@@ -148,6 +148,38 @@ $ boot print-meta markdown print-meta
   :path "index.md",
   :short-filename "index"})
 ```
+
+Let's do something with that information, let's render it to a
+file. Perun provides a `render` task. Let's use `boot` to figure out what it does:
+
+```sh
+TODO fix this
+$ boot render --help
+Render individual pages for entries in perun data.
+
+The symbol supplied as `renderer` should resolve to a function
+which will be called with a map containing the following keys:
+ - `:meta`, global perun metadata
+ - `:entries`, all entries
+ - `:entry`, the entry to be rendered
+
+Entries can optionally be filtered by supplying a function
+to the `filterer` option.
+
+Filename is determined as follows:
+If permalink is set for the file, it is used as the filepath.
+If permalink ends in slash, index.html is used as filename.
+If permalink is not set, the original filename is used with file extension set to html.
+
+Options:
+  -h, --help               Print this help info.
+  -o, --out-dir OUTDIR     Set the output directory to OUTDIR.
+      --filterer FILTER    Set filter function to FILTER.
+  -r, --renderer RENDERER  Set page renderer (fully qualified symbol which resolves to a function) to RENDERER.
+```
+
+Ok, so rendering individual pages for entries. Given that we only have
+a single entry right now that sounds like what we want.
 
 
 [terminal-basics-mac]: http://mac.appstorm.net/how-to/utilities-how-to/how-to-use-terminal-the-basics/
