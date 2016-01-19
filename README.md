@@ -1,8 +1,12 @@
-# Guide
+# Getting Started
 
 This guide is intended to introduce programming beginners to making
 websites, in particular static websites. It aims to assume little prior
 knowledge except for the very basics of programming with Clojure.
+
+> If you have any questions while following this guide please open an
+> issue or join the `#perun` channel in the http://clojurians.net
+> Slack group.
 
 #### Step 1: Install Boot
 
@@ -227,9 +231,9 @@ Now add a file at `src/site/core.clj` containing the following:
 ```
 
 We've added a function that renders a bit of HTML and inserts what has
-previously been parsed by the `markdown` task (the `:content`). The rendering
-is done by [Hiccup][https://github.com/weavejester/hiccup] a library to
-convert Clojure data structures to HTML. A simplistic example would be:
+previously been parsed by the `markdown` task (the `:content`). The
+rendering is done by [Hiccup][hiccup] a library to convert Clojure
+data structures to HTML. A simplistic example would be:
 
 ```
 [:span {:class "foo"} "bar"]    ; Clojure
@@ -239,7 +243,7 @@ convert Clojure data structures to HTML. A simplistic example would be:
 Now that we have a function that we can use as `renderer` let's give it a try:
 
 ```sh
-$ boot markdown render -r site.core/page
+$ boot markdown render -r site.core/page  # -r is a shorthand for --renderer
 ```
 
 **Error!** Our program can't find the Hiccup code because we haven't
@@ -285,12 +289,148 @@ Now there should be a directory called `target` containing another
 directory `public`, finally containing a file `index.html`.
 If you open that file you should see your new website! :tada:
 
+Admittedly it is a very basic website but let's recap what we've done:
+
+1. We have decoupled our actual content from the rendered HTML using
+   Markdown. This makes it easy to write and edit our site.
+1. We have a small function rendering our page to an actual HTML file
+   giving us full control over the rendered HTML and it's appearance.
+1. Because an HTML file is generated for each Markdown file it's
+   trivial to add new pages.
+
+#### Adding more pages and proper serving
+
+Let's add an about page by adding the file `content/about.markdown`:
+
+```markdown
+# About this site
+This site has been made by following the Perun guides
+```
+
+Also so that our visitors can find our new about page let's change our
+`index.markdown` file to look like this:
+
+```markdown
+# Hello World
+We are making a website! ([about this website](/about.html))
+```
+
+After rebuilding our site by running `boot markdown render -r
+site.core/page target` we can open `target/public/index.html` again
+and see that there is a link to our new about page. If we click it
+however there will be an error.
+
+This is because currently we're just opening those files from our
+filesystem and not retrieving them from a server as it's usually done
+with websites. To get closer to the "mode of operation" of an actual
+website we need to serve our website over [HTTP][http].
+
+Add `[pandeiro/boot-http "0.7.0"]` to the list of `:dependencies` in
+your `build.boot`. Also modify the `require` statement in that file to
+look like this:
+
+```clojure
+(require '[io.perun :refer :all]
+         '[pandeiro.boot-http :refer [serve]])
+```
+
+Now run this:
+
+```
+boot serve --resource-root public markdown render -r site.core/page wait
+```
+
+There are two new things here:
+
+1. `serve --resource-root public` — The `serve` task starts an HTTP
+    server and serves files from the JAVA classpath, which we can
+    think of as an imaginary directory somewhere on our computer
+    containing lots of files. When we previously used the `target`
+    task we saw that our generated files were all in a directory
+    `public` so we tell the server to only respond to requests for
+    files in `public`. (We could have also used the shorthand `-r`
+    option instead of `--resource-root` by the way.)
+2. `wait` tells the task pipeline to wait even after it has finished.
+    This way we ensure that even after all files are generated the server
+    will keep running to serve those files.
+
+Now after running this command there will be a line printed like this one:
+```
+Started Jetty on http://localhost:3000
+```
+Go to http://localhost:3000 — you should see the index.html file with
+the link to your about page. Clicking on the link will bring you to
+http://localhost:3000/about.html properly displaying your about page.
+
+**Success!** Every good website should have a way to go back to it's
+homepage however so let's modify our renderer function to always show
+a link to the homepage ("root") of the site. In `src/site/core.clj` change
+the `page` function to look like this
+
+```clojure
+(defn page [data]
+  (hp/html5
+   [:div {:style "max-width: 900px; margin: 0 auto;"}
+    [:a {:href "/"} "Home"] ; <---- We added this
+    (-> data :entry :content)]))
+```
+
+After restarting our site building & serving command go to
+http://localhost:3000 again and view your site. On both pages there
+should now be a little "Home" link at the top bringing you back to the
+index page.
+
+**One more thing before you're done:** Currently every time we make a
+change we have to restart our command.  To avoid this you can adapt
+the command like this:
+
+```sh
+boot serve -r public watch markdown render -r site.core/page
+```
+The `watch` task will rebuild your page whenever an important file
+changes. (Because the watch tasks keeps the pipeline running we don't
+need `wait` any longer.) **Give it a try by editing `index.markdown`
+and reloading the browser!**
+
+#### This is it!
+
+You're at the end of the "Getting Started" tutorial. There are many
+things still to be explored, proceed with whatever interests you most:
+
+- Admittedly our site isn't very pretty right now. [CSS][css] can be
+  used to influence the appearance of HTML. It can color texts and
+  backgrounds and do a large number of other things. If you're
+  familiar with CSS you might already know how to add more CSS to the
+  page, if not you can learn all about CSS in the
+  [excellent material created by CSSClasses][cssclasses-guide].
+- Remembering and typing the long `boot serve ...` command can be
+  annoying, learn how you can define your own tasks consisting of
+  several sub-tasks in the [Boot Task Guide][task-guide]
+- Everyone can have a [blog][blog], they're a good way to keep friends
+  updated, talk about technical problems and their solutions or write
+  about whatever you want. If you'd like to add a blog to your new
+  site or are just curious how that would work
+  [check out the Blog Guide][blog-guide].
+- You now have a website, great! But it's not on the internet and so
+  you can't show it to any of your friends. To learn more about how to
+  deploy your website [check out the Deployment Guide][deploy-guide].
+
+#### Questions?
+
+If you have any questions please open an issue or join the `#perun`
+channel in the http://clojurians.net Slack group.
+
 [terminal-basics-mac]: http://mac.appstorm.net/how-to/utilities-how-to/how-to-use-terminal-the-basics/
 [terminal-basics-linux]: http://community.linuxmint.com/tutorial/view/100
 [terminal-basics-windows]: http://www.cs.princeton.edu/courses/archive/spr05/cos126/cmd-prompt.html
 [perun]: https://github.com/hashobject/perun
 [markdown]: https://en.wikipedia.org/wiki/Markdown
 [html]: https://en.wikipedia.org/wiki/HTML
+[http]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
+[hiccup]: https://github.com/weavejester/hiccup
+[css]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
+[cssclasses-guide]: http://cssclasses.cssconf.eu/materials/#css
+[blog]: https://en.wikipedia.org/wiki/Blog
 
 # Talk
 
