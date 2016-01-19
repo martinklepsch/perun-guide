@@ -55,9 +55,9 @@ BOOT_EMIT_TARGET=no
 
 #### Step 3: The Simplest Thing Possible &trade;
 
-Now let's create the simplest possible website possible: a single page with some text on it.
+Now let's create the simplest website possible: a single page with some text on it.
 
-Create the directory `content` and place a file `index.markdown` inside it:
+Create the directory `content` and place a file `index.markdown` inside it, containing the following:
 
 ```markdown
 # Hello World
@@ -225,7 +225,7 @@ Now add a file at `src/site/core.clj` containing the following:
 
 (defn page [data]
   (hp/html5
-   [:div {:style "max-width: 900px"}
+   [:div {:style "max-width: 900px; margin: 40px auto;"}
     (-> data :entry :content)]))
 ```
 
@@ -235,8 +235,8 @@ rendering is done by [Hiccup][hiccup] a library to convert Clojure
 data structures to HTML. A simplistic example would be:
 
 ```
-[:span {:class "foo"} "bar"]    ; Clojure
-<span class=\"foo\">bar</span>  ; HTML
+[:span {:class "foo"} "bar"]    ; Clojure produces
+<span class="foo">bar</span>    ; HTML
 ```
 
 Now that we have a function that we can use as `renderer` let's give it a try:
@@ -290,14 +290,14 @@ If you open that file you should see your new website! :tada:
 
 Admittedly it is a very basic website but let's recap what we've done:
 
-1. We have decoupled our actual content from the rendered HTML using
-   Markdown. This makes it easy to write and edit our site.
-1. We have a small function rendering our page to an actual HTML file
-   giving us full control over the rendered HTML and it's appearance.
+1. Instead of writing our complete website in HTML we only define it's
+   "frame" or layout in Hiccup/HTML. For the actual content of our
+   website we use a specific language (Markdown) making it much easier
+   to write and edit content.
 1. Because an HTML file is generated for each Markdown file it's
    trivial to add new pages.
 
-#### Adding more pages and proper serving
+#### Adding more pages and a real server
 
 Let's add an about page by adding the file `content/about.markdown`:
 
@@ -322,7 +322,8 @@ however there will be an error.
 This is because currently we're just opening those files from our
 filesystem and not retrieving them from a server as it's usually done
 with websites. To get closer to the "mode of operation" of an actual
-website we need to serve our website over [HTTP][http].
+website and to fix this problem we need to serve our website over
+[HTTP][http].
 
 Add `[pandeiro/boot-http "0.7.0"]` to the list of `:dependencies` in
 your `build.boot`. Also modify the `require` statement in that file to
@@ -333,7 +334,7 @@ look like this:
          '[pandeiro.boot-http :refer [serve]])
 ```
 
-Now run this:
+Now use the newly available `serve` task like this:
 
 ```
 boot serve --resource-root public markdown render -r site.core/page wait
@@ -357,9 +358,11 @@ Now after running this command there will be a line printed like this one:
 ```
 Started Jetty on http://localhost:3000
 ```
-Go to http://localhost:3000 — you should see the index.html file with
-the link to your about page. Clicking on the link will bring you to
-http://localhost:3000/about.html properly displaying your about page.
+Go to [http://localhost:3000](http://localhost:3000) — you should see
+the index.html file with the link to your about page. Clicking on the
+link will bring you to
+[http://localhost:3000/about.html](http://localhost:3000/about.html)
+properly displaying your about page.
 
 **Success!** Every good website should have a way to go back to it's
 homepage however so let's modify our renderer function to always show
@@ -375,13 +378,13 @@ the `page` function to look like this
 ```
 
 After restarting our site building & serving command go to
-http://localhost:3000 again and view your site. On both pages there
-should now be a little "Home" link at the top bringing you back to the
-index page.
+[http://localhost:3000](http://localhost:3000) again and view your
+site. On both pages there should now be a little "Home" link at the
+top bringing you back to the index page.
 
 **One more thing before you're done:** Currently every time we make a
-change we have to restart our command.  To avoid this you can adapt
-the command like this:
+change we have to restart our command. To avoid this you can adapt the
+command like this:
 
 ```sh
 boot serve -r public watch markdown render -r site.core/page
