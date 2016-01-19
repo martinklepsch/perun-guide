@@ -23,8 +23,7 @@ If you already have Boot installed make sure you're using the latest version (`b
 
 > Note: This tutorial will assume a UNIX-like system (i.e. Linux/Mac), if you're using
 > windows you can either look up the respective commands or try using the Explorer for basic tasks.
-
-> Note: Here are some basic intro links to working with a terminal:
+> Here are some basic intro links to working with a terminal:
 > [Mac][terminal-basics-mac], [Linux][terminal-basics-linux], [Windows][terminal-basics-windows]
 
 Create a directory:
