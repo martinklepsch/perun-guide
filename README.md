@@ -33,7 +33,7 @@ and use your favorite text editor to add a file `build.boot` as below:
 
 ```clojure
 (set-env!
- :source-paths #{"content"}
+ :source-paths #{"src" "content"}
  :dependencies '[[perun "0.3.0" :scope "test"]])
 
 (require '[io.perun :refer :all])
@@ -104,10 +104,10 @@ The part below the `[...]` has been added to the set of available
 tasks by the code we put into our `build.boot` file and are part of
 [Perun][perun], the static site generator we will use in this guide.
 
-> Perun works, similarily to Boot, by tasks operating on a value and
-> producing a new value. By ensuring that the newly produced value looks
-> similarily to the received value you can mix and match tasks as you
-> wish (this is often called composition).
+> Perun works, similarily to (and on top of) Boot, by tasks operating on
+> a value and producing a new value. By ensuring that the newly
+> produced value looks similarily to the received value you can mix
+> and match tasks as you wish (this is often called composition).
 
 Since we've just created a `index.markdown` file, let's try the `markdown` task:
 
@@ -150,7 +150,8 @@ $ boot print-meta markdown print-meta
 ```
 
 Let's do something with that information, let's render it to a
-file. Perun provides a `render` task. Let's use `boot` to figure out what it does:
+file. Perun provides a `render` task. Let's use `boot` to figure out
+what it does:
 
 ```sh
 TODO fix this
@@ -179,8 +180,110 @@ Options:
 ```
 
 Ok, so rendering individual pages for entries. Given that we only have
-a single entry right now that sounds like what we want.
+a single entry right now that sounds like what we want. Let's try just calling
+the `render` task after the `markdown` task:
 
+```
+$ boot markdown render
+[markdown] - parsed 1 markdown files
+             clojure.lang.ExceptionInfo: java.lang.AssertionError: Assert failed: Renderer must be a fully qualified symbol, i.e. 'my.ns/fun
+                                         (and (symbol? sym) (namespace sym))
+    data: {:file
+           "/var/folders/ss/4qg3hk1d4nv40phg1360ng5w0000gn/T/boot.user1104049499782741856.clj",
+           :line 19}
+java.util.concurrent.ExecutionException: java.lang.AssertionError: Assert failed: Renderer must be a fully qualified symbol, i.e. 'my.ns/fun
+                                         (and (symbol? sym) (namespace sym))
+               java.lang.AssertionError: Assert failed: Renderer must be a fully qualified symbol, i.e. 'my.ns/fun
+                                         (and (symbol? sym) (namespace sym))
+          io.perun/assert-renderer!  perun.clj:  375
+             io.perun/render-in-pod  perun.clj:  379
+         io.perun/eval2098/fn/fn/fn  perun.clj:  417
+         io.perun/eval1600/fn/fn/fn  perun.clj:  116
+                boot.core/run-tasks   core.clj:  794
+                  boot.core/boot/fn   core.clj:  804
+clojure.core/binding-conveyor-fn/fn   core.clj: 1916
+                                ...
+```
+
+Duh, that didn't work. The error tells us we need to supply a
+(fully-qualified) symbol to the `renderer` option pointing to a
+function. Let's create a namespace with a renderer function for our
+page. First create the required directory structure:
+
+```sh
+mkdir -p src/site
+```
+
+Now add a file at `src/site/core.clj` containing the following:
+
+```clojure
+(ns site.core
+  (:require [hiccup.page :as hp]))
+
+(defn page [data]
+  (hp/html5
+   [:div {:style "max-width: 900px"}
+    (-> data :entry :content)]))
+```
+
+We've added a function that renders a bit of HTML and inserts what has
+previously been parsed by the `markdown` task (the `:content`). The rendering
+is done by [Hiccup][https://github.com/weavejester/hiccup] a library to
+convert Clojure data structures to HTML. A simplistic example would be:
+
+```
+[:span {:class "foo"} "bar"]    ; Clojure
+<span class=\"foo\">bar</span>  ; HTML
+```
+
+Now that we have a function that we can use as `renderer` let's give it a try:
+
+```sh
+$ boot markdown render -r site.core/page
+```
+
+**Error!** Our program can't find the Hiccup code because we haven't
+added it to our list of dependencies. Modify `build.boot` so it looks
+like this:
+
+```clojure
+(set-env!
+ :source-paths #{"src" "content"}
+ :dependencies '[[perun  "0.3.0" :scope "test"]
+                 [hiccup "1.0.5"]])
+
+(require '[io.perun :refer :all])
+```
+
+> Note: By adding a dependency to the list of `:dependencies` in `build.boot`
+> you make it available to the rest of your program.
+
+Now try the command from above again and see that it works:
+
+```sh
+$ boot markdown render -r site.core/page
+[markdown] - parsed 1 markdown files
+[render] - rendered 1 pages
+```
+
+Still we don't see any files being generated, to fix that just append
+the `target` task to your command:
+
+```sh
+$ boot markdown render -r site.core/page target
+[markdown] - parsed 1 markdown files
+[render] - rendered 1 pages
+Writing target dir(s)...
+```
+
+> Note: Remember the value we spoke about earlier that is passed from
+> task to task? In Boot this value describes a directory structure and
+> files inside it. Whenever the `target` task is used Boot will sync
+> relevant files from this description to an actual target directory.
+
+Now there should be a directory called `target` containing another
+directory `public`, finally containing a file `index.html`.
+If you open that file you should see your new website! :tada:
 
 [terminal-basics-mac]: http://mac.appstorm.net/how-to/utilities-how-to/how-to-use-terminal-the-basics/
 [terminal-basics-linux]: http://community.linuxmint.com/tutorial/view/100
