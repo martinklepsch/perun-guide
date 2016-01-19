@@ -405,6 +405,9 @@ things still to be explored, proceed with whatever interests you most:
   familiar with CSS you might already know how to add more CSS to the
   page, if not you can learn all about CSS in the
   [excellent material created by CSSClasses][cssclasses-guide].
+- Perhaps the content on our new site could also be expanded. Adding
+  lists, images and code snippets is trivial with Markdown. You can learn
+  more about Markdown in [Github's excellent guides][md-guide].
 - Remembering and typing the long `boot serve ...` command can be
   annoying, learn how you can define your own tasks consisting of
   several sub-tasks in the [Boot Task Guide][task-guide]
@@ -413,6 +416,10 @@ things still to be explored, proceed with whatever interests you most:
   about whatever you want. If you'd like to add a blog to your new
   site or are just curious how that would work
   [check out the Blog Guide][blog-guide].
+- Sometimes instead of texts you want to have a page rendering other
+  kinds of data. A list of colleagues and and pictures of their faces
+  for instance. Markdown is not ideal for these use cases. To learn what
+  you can do in these case [check out the Beyond-Markdown Guide][beyond-md-guide].
 - You now have a website, great! But it's not on the internet and so
   you can't show it to any of your friends. To learn more about how to
   deploy your website [check out the Deployment Guide][deploy-guide].
@@ -432,6 +439,7 @@ channel in the http://clojurians.net Slack group.
 [hiccup]: https://github.com/weavejester/hiccup
 [css]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [cssclasses-guide]: http://cssclasses.cssconf.eu/materials/#css
+[md-guide]: https://guides.github.com/features/mastering-markdown/
 [blog]: https://en.wikipedia.org/wiki/Blog
 
 # Talk
